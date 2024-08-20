@@ -8,13 +8,11 @@ buildscript {
 	}
 	dependencies {
 		classpath "org.springframework.boot:spring-boot-gradle-plugin:3.3.2"
-//		classpath "org.springframework.boot.experimental:spring-boot-thin-gradle-plugin:1.0.31.RELEASE"
 		classpath "io.spring.gradle:dependency-management-plugin:1.1.6"
 		classpath "com.github.johnrengelman:shadow:8.1.1"
 	}
 }
 
-//apply plugin: "org.springframework.boot.experimental.thin-launcher"
 apply plugin: "org.springframework.boot"
 apply plugin: 'java'
 apply plugin: 'maven-publish'
@@ -22,7 +20,7 @@ apply plugin: "io.spring.dependency-management"
 apply plugin: "com.github.johnrengelman.shadow"
 
 group = 'co.ptm'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.1'
 
 java {
 	toolchain {
@@ -37,65 +35,28 @@ configurations {
 }
 
 repositories {
+	mavenLocal()
 	mavenCentral()
 }
 
-ext {
-	set('springCloudVersion', "2023.0.3")
-}
-
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter'
-	implementation 'org.springframework.cloud:spring-cloud-function-context'
-	implementation 'org.springframework.cloud:spring-cloud-function-adapter-aws:4.1.3'
+	compileOnly project(':lib')
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-dependencyManagement {
-	imports {
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-	}
-}
-
 tasks.named('test') {
 	useJUnitPlatform()
 }
 
-
-
 assemble.dependsOn = [shadowJar]
-
-publishing {
-	publications {
-		maven(MavenPublication) {
-			from components.java
-			versionMapping {
-				usage('java-api') {
-					fromResolutionOf('runtimeClasspath')
-				}
-				usage('java-runtime') {
-					fromResolutionResult()
-				}
-			}
-		}
-	}
-}
-
-//shadowJar.mustRunAfter thinJar
-
-
 
 import com.github.jengelman.gradle.plugins.shadow.transformers.*
 
 shadowJar {
-	archiveClassifier = 'aws'
-//	manifest {
-//		inheritFrom(project.tasks.thinJar.manifest)
-//	}
-	// Required for Spring
+	archiveClassifier.set('aws')
 	manifest {
 		attributes('Main-Class': 'co.ptm.lambda.LambdaApplication')
 	}
@@ -109,8 +70,4 @@ shadowJar {
 		paths = ['META-INF/spring.factories']
 		mergeStrategy = "append"
 	}
-}
-
-springBoot{
-	mainClass='co.ptm.lambda.LambdaApplication'
 }
